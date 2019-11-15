@@ -1,9 +1,18 @@
 Zombiepocalypse Top Down Shooter Game
 =====================================
 
+== Controls
 Controls: +
 W - go forward +
 S - go backwards +
 A - rotate left +
 D - rotate right +
 SPACE - shoot
+
+== How to run
+Compile and package with: +
+`./gradlew jar` on Linux +
+`./gradlew.bat jar` on Windows
+
+Run with: +
+`java -jar build/libs/new_tiled.jar`
