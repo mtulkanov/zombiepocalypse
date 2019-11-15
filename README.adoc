@@ -1,0 +1,9 @@
+Zombiepocalypse Top Down Shooter Game
+=====================================
+
+Controls: +
+W - go forward +
+S - go backwards +
+A - rotate left +
+D - rotate right +
+SPACE - shoot
