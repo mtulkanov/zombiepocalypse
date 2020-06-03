@@ -1,16 +1,18 @@
 package com.mtulkanov.tiled;
 
+import com.mtulkanov.tiled.pathfinder.Pathfinder;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Random;
 
 class Mob {
-    private final int[] MOVE_SPEEDS = {100, 125, 150};
-    private final int AVOID_RADIUS = 50;
-    private final int FULL_HEALTH = 100;
-    private final int DAMAGE = 10;
-    private final int KNOCKBACK = 20;
-    private final long HIT_COOLDOWN = 500_000_000;
+    private static final int[] MOVE_SPEEDS = {100, 125, 150};
+    private static final int AVOID_RADIUS = 50;
+    private static final int FULL_HEALTH = 100;
+    private static final int DAMAGE = 10;
+    private static final int KNOCKBACK = 20;
+    private static final long HIT_COOLDOWN = 500_000_000;
 
     private Rect rect;
     private BufferedImage sprite;
@@ -21,16 +23,18 @@ class Mob {
     private boolean dead = false;
     private int health = FULL_HEALTH;
     private long lastHit;
+    private Pathfinder pathfinder;
 
-    Mob(Vector2 topLeft, BufferedImage sprite) {
-        rect = new Rect(topLeft, sprite.getWidth(), sprite.getHeight());
+    public Mob(Vector2 topLeft, BufferedImage sprite, Pathfinder pathfinder) {
+        this.rect = new Rect(topLeft, sprite.getWidth(), sprite.getHeight());
         this.sprite = sprite;
-        moveSpeed = getRandomSpeed();
+        this.moveSpeed = getRandomSpeed();
+        this.pathfinder = pathfinder;
     }
 
-    void update() {
-        var playerOrigin = Game.getGame().getPlayer().getRect().getOrigin();
-        var sight = playerOrigin.minus(rect.getOrigin());
+    public void update(Player player) {
+        var playerOrigin = player.getRect().getOrigin();
+        var sight = pathfinder.path(rect.getOrigin(), playerOrigin);
         rot = sight.angle(new Vector2(1, 0));
         acc = new Vector2(1, 0).rotate(rot);
         avoidMobs();
@@ -38,42 +42,64 @@ class Mob {
         vel = vel.add(acc.multi(Game.getGame().getDt()));
         var displacement =
                 vel.multi(Game.getGame().getDt())
-                .add(
-                        acc
-                                .multi(0.5)
-                                .multi(Game.getGame().getDt() * Game.getGame().getDt())
-                );
+                        .add(
+                                acc
+                                        .multi(0.5)
+                                        .multi(Game.getGame().getDt() * Game.getGame().getDt())
+                        );
         if (System.nanoTime() - lastHit < HIT_COOLDOWN) {
             return;
         }
         rect = new WallCollider(rect).move(displacement);
-        if (rect.collides(Game.getGame().getPlayer().getRect())) {
-            Game.getGame().getPlayer().takeDamage(DAMAGE);
+        if (rect.collides(player.getRect())) {
+            player.takeDamage(DAMAGE);
             lastHit = System.nanoTime();
             var knockback = new Vector2(KNOCKBACK, 0).rotate(rot);
-            Game.getGame().getPlayer().knockback(knockback);
+            player.knockback(knockback);
         }
     }
 
-    private void avoidMobs() {
-        for (Mob mob: Game.getGame().getMobs()) {
-            if (mob != this) {
-                var dir = rect.getOrigin().minus(mob.getRect().getOrigin());
-                var distance = dir.magnitude();
-                if (distance > 0 && distance < AVOID_RADIUS) {
-                    acc = acc.add(dir.unit());
-                }
-            }
-        }
-    }
-
-    void render(Graphics g, Vector2 offset) {
+    public void render(Graphics g, Vector2 offset) {
         var coords = rect.getOrigin().add(offset);
         drawSprite(g, coords);
         drawHealthBar(g, coords);
+        if (Game.getGame().isDebug()) {
+//            rect.draw(g, Game.DEBUG_COLOR, offset);
+            pathfinder.render(g, offset);
+        }
     }
 
-    void drawSprite(Graphics g, Vector2 coords) {
+    public void takeDamage(int damage) {
+        health -= damage;
+        vel = new Vector2(0, 0);
+        if (health <= 0) {
+            kill();
+        }
+    }
+
+    public void knockback(Vector2 knockback) {
+        rect = new WallCollider(rect).move(knockback);
+    }
+
+    public Rect getRect() {
+        return rect;
+    }
+
+    public boolean isDead() {
+        return dead;
+    }
+
+    private int getRandomSpeed() {
+        var rng = new Random();
+        var index = rng.nextInt(MOVE_SPEEDS.length);
+        return MOVE_SPEEDS[index];
+    }
+
+    private void kill() {
+        dead = true;
+    }
+
+    private void drawSprite(Graphics g, Vector2 coords) {
         var g2 = (Graphics2D) g.create();
         g2.rotate(Math.toRadians(rot), coords.getIntX(), coords.getIntY());
         g2.drawImage(
@@ -86,7 +112,7 @@ class Mob {
         g2.rotate(Math.toRadians(-rot), coords.getIntX(), coords.getIntY());
     }
 
-    void drawHealthBar(Graphics g, Vector2 coords) {
+    private void drawHealthBar(Graphics g, Vector2 coords) {
         Color color = Color.GREEN;
         if (health < 60) {
             color = Color.YELLOW;
@@ -101,29 +127,15 @@ class Mob {
         }
     }
 
-    void kill() {
-        dead = true;
-    }
-
-    Rect getRect() {
-        return rect;
-    }
-
-    boolean isDead() {
-        return dead;
-    }
-
-    private int getRandomSpeed() {
-        var rng = new Random();
-        var index = rng.nextInt(MOVE_SPEEDS.length);
-        return MOVE_SPEEDS[index];
-    }
-
-    void takeDamage(int damage) {
-        health -= damage;
-        vel = new Vector2(0, 0);
-        if (health <= 0) {
-            kill();
+    private void avoidMobs() {
+        for (Mob mob : Game.getGame().getMobs()) {
+            if (mob != this) {
+                var dir = rect.getOrigin().minus(mob.getRect().getOrigin());
+                var distance = dir.magnitude();
+                if (distance > 0 && distance < AVOID_RADIUS) {
+                    acc = acc.add(dir.unit());
+                }
+            }
         }
     }
 }

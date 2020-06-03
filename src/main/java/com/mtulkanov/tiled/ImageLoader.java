@@ -4,8 +4,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-class ImageLoader {
-    static BufferedImage load(String path) {
+public class ImageLoader {
+    public static BufferedImage load(String path) {
         try {
             return ImageIO.read(ImageLoader.class.getClassLoader().getResourceAsStream(path));
         } catch (IOException e) {

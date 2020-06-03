@@ -1,11 +1,24 @@
 package com.mtulkanov.tiled;
 
+import com.mtulkanov.tiled.graph.*;
+import com.mtulkanov.tiled.pathfinder.BreadthFirstSearchPathfinder;
+import com.mtulkanov.tiled.pathfinder.Pathfinder;
+import com.mtulkanov.tiled.pathfinder.RunAwayPathfinder;
+import com.mtulkanov.tiled.pathfinder.StraightLinePathfinder;
+import com.mtulkanov.tiled.tmx.TileMap;
+import com.mtulkanov.tiled.tmx.TileObject;
+
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 public class Game implements Runnable {
-    static final int TILESIZE = 64;
+
+    public static final Color DEBUG_COLOR = Color.CYAN;
+    public static final Color NODE_COLOR = Color.YELLOW;
+    public static final Color PATH_COLOR = Color.BLUE;
 
     private static final int WIDTH = 1024;
     private static final int HEIGHT = 768;
@@ -16,6 +29,12 @@ public class Game implements Runnable {
 
     private static final Color BGCOLOR = BROWN;
 
+    private static final String TILE_MAP_PATH = "maps/tiled.tmx";
+
+    private static final String PLAYER_NAME = "Player";
+    private static final String WALL_NAME = "Wall";
+    private static final String ZOMBIE_NAME = "Zombie";
+
     private static Game game;
 
     private Display display;
@@ -25,14 +44,16 @@ public class Game implements Runnable {
     private double dt;
     private Graphics g;
     private KeyManager keyManager;
-    private Map map;
 
     private Player player;
     private Camera camera;
 
-    private List<Wall> walls;
+    private List<Obstacle> obstacles;
     private List<Mob> mobs;
     private List<Bullet> bullets;
+    private TileMap tileMap;
+
+    private boolean debug = true;
 
     static Game getGame() {
         if (game == null) {
@@ -50,26 +71,80 @@ public class Game implements Runnable {
         display = new Display(title, WIDTH, HEIGHT);
         display.getFrame().addKeyListener(keyManager);
         Assets.init();
+        tileMap = new TileMap(TILE_MAP_PATH);
         initState();
     }
 
     private void initState() {
-        this.map = new Map("maps/map4.txt");
         this.camera = new Camera(WIDTH, HEIGHT);
-        player = map.getPlayer();
-        walls = map.getWalls();
-        mobs = map.getMobs();
+        player = initPlayer(tileMap);
+        obstacles = initObstacles(tileMap);
+        mobs = initMobs(tileMap);
         bullets = new LinkedList<>();
+    }
+
+    private List<Obstacle> initObstacles(TileMap tileMap) {
+        obstacles = new ArrayList<>();
+        List<TileObject> tileObjects = tileMap.getTileObjects().get(WALL_NAME);
+        if (tileObjects == null) {
+            return obstacles;
+        }
+        for (TileObject tileObject: tileObjects) {
+            Vector2 firstPoint = new Vector2(tileObject.getX(), tileObject.getY());
+            int width = tileObject.getWidth();
+            int height = tileObject.getHeight();
+            Obstacle obstacle = new Obstacle(firstPoint, width, height);
+            obstacles.add(obstacle);
+        }
+        return obstacles;
+    }
+
+    private Player initPlayer(TileMap tileMap) {
+        TileObject tileObject = tileMap.getTileObjects().get(PLAYER_NAME).get(0);
+        int x = tileObject.getX() - Assets.player.getWidth() / 2;
+        int y = tileObject.getY() - Assets.player.getHeight() / 2;
+        Vector2 firstPoint = new Vector2(x, y);
+        return new Player(firstPoint, Assets.player);
+    }
+
+    private List<Mob> initMobs(TileMap tileMap) {
+        List<Mob> mobs = new ArrayList<>();
+        List<TileObject> tileObjects = tileMap.getTileObjects().get(ZOMBIE_NAME);
+        if (tileObjects == null) {
+            return mobs;
+        }
+        List<Node> nodes = NodeLoader.load(tileMap);
+        Graph graph = GraphLoader.load(nodes, obstacles);
+        for (TileObject tileObject: tileObjects) {
+            int x = tileObject.getX() - Assets.player.getWidth() / 2;
+            int y = tileObject.getY() - Assets.player.getHeight() / 2;
+            Vector2 firstPoint = new Vector2(x, y);
+            Pathfinder pathfinder = new BreadthFirstSearchPathfinder(
+                    graph,
+                    new BreadthFirstSearchWithPath(),
+                    obstacles
+            );
+            Mob mob = new Mob(firstPoint, Assets.mob, pathfinder);
+            mobs.add(mob);
+        }
+        return mobs;
     }
 
     private void update() {
         keyManager.update();
+        updateDebug();
         player.update();
-        mobs.forEach(Mob::update);
+        mobs.forEach(mob -> mob.update(player));
         bullets.forEach(Bullet::update);
         bullets.removeIf(Bullet::isDespawned);
         mobs.removeIf(Mob::isDead);
         camera.update(player);
+    }
+
+    private void updateDebug() {
+        if (keyManager.wasClicked(KeyEvent.VK_G)) {
+            debug = !debug;
+        }
     }
 
     private void render() {
@@ -84,24 +159,16 @@ public class Game implements Runnable {
         //draw
         g.setColor(BGCOLOR);
         g.fillRect(0, 0, WIDTH, HEIGHT);
-//        drawGrid(); for testing
-        walls.forEach(wall -> wall.render(g, camera.getOffset()));
+        tileMap.render(g, camera.getOffset());
         mobs.forEach(mob -> mob.render(g, camera.getOffset()));
         bullets.forEach(bullet -> bullet.render(g, camera.getOffset()));
         player.render(g, camera.getOffset());
+        if (debug) {
+            obstacles.forEach(obstacle -> obstacle.render(g, camera.getOffset()));
+        }
 
         bs.show();
         g.dispose();
-    }
-
-    private void drawGrid() {
-        g.setColor(LIGHT_GREY);
-        for (int x = 0; x < WIDTH; x += TILESIZE) {
-            g.drawLine(x, 0, x, HEIGHT);
-        }
-        for (int y = 0; y < HEIGHT; y += TILESIZE) {
-            g.drawLine(0, y, WIDTH, y);
-        }
     }
 
     @Override
@@ -170,12 +237,8 @@ public class Game implements Runnable {
         return dt;
     }
 
-    Map getMap() {
-        return map;
-    }
-
-    List<Wall> getWalls() {
-        return walls;
+    List<Obstacle> getObstacles() {
+        return obstacles;
     }
 
     List<Mob> getMobs() {
@@ -184,5 +247,13 @@ public class Game implements Runnable {
 
     public List<Bullet> getBullets() {
         return bullets;
+    }
+
+    public TileMap getTileMap() {
+        return tileMap;
+    }
+
+    public boolean isDebug() {
+        return debug;
     }
 }

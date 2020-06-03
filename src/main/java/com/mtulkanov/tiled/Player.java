@@ -56,6 +56,9 @@ class Player {
         var coords = rect.getOrigin().add(offset);
         drawSprite(g, coords);
         drawHealthBar(g);
+        if (Game.getGame().isDebug()) {
+            rect.draw(g, Game.DEBUG_COLOR, offset);
+        }
     }
 
     void drawSprite(Graphics g, Vector2 coords) {
@@ -68,7 +71,6 @@ class Player {
         g2.drawImage(sprite, coords.getIntX() - rect.getWidth() / 2, coords.getIntY() - rect.getHeight() / 2, null);
         g2.dispose();
         g2.rotate(Math.toRadians(-rot), coords.getIntX(), coords.getIntY());
-//        rect.draw(g, Color.RED, offset);
     }
 
     void drawHealthBar(Graphics g) {

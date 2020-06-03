@@ -3,11 +3,11 @@ package com.mtulkanov.tiled;
 import java.util.List;
 
 class WallCollider {
-    private List<Wall> walls;
+    private List<Obstacle> obstacles;
     private Rect rect;
 
     WallCollider(Rect rect) {
-        this.walls = Game.getGame().getWalls();
+        this.obstacles = Game.getGame().getObstacles();
         this.rect = new Rect(rect);
     }
 
@@ -41,8 +41,8 @@ class WallCollider {
         return rect;
     }
 
-    private Wall collides() {
-        for (var wall: walls) {
+    private Obstacle collides() {
+        for (var wall : obstacles) {
             if (rect.collides(wall.getRect())) {
                 return wall;
             }

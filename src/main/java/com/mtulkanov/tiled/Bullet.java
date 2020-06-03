@@ -9,6 +9,7 @@ class Bullet {
     private static final int LIFETIME = 1_000_000_000;
     private static final int SPREAD = 5;
     private static final int DAMAGE = 10;
+    private static final int KNOCKBACK = 10;
 
     private final Rect rect;
     private final BufferedImage sprite;
@@ -33,8 +34,15 @@ class Bullet {
             if (mob.getRect().collides(rect)) {
                 mob.takeDamage(DAMAGE);
                 despawn();
+                knockback(mob);
             }
         }
+    }
+
+    private void knockback(Mob mob) {
+        double angle = dir.angle(new Vector2(1, 0));
+        Vector2 knockback = new Vector2(KNOCKBACK, 0).rotate(angle);
+        mob.knockback(knockback);
     }
 
     void render(Graphics g, Vector2 offset) {
@@ -51,8 +59,8 @@ class Bullet {
     }
 
     boolean collidesWithWalls() {
-        for (var wall: Game.getGame().getWalls()) {
-            if (rect.collides(wall.getRect())) {
+        for (var obstacle: Game.getGame().getObstacles()) {
+            if (rect.collides(obstacle.getRect())) {
                 return true;
             }
         }

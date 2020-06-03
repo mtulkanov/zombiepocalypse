@@ -7,7 +7,7 @@ public class Rect {
     private int width;
     private int height;
 
-    Rect(Vector2 firstPoint, int width, int height) {
+    public Rect(Vector2 firstPoint, int width, int height) {
         this.origin = new Vector2(
                 firstPoint.getX() + width / 2.0,
                 firstPoint.getY() + height / 2.0
@@ -90,14 +90,14 @@ public class Rect {
         return gapX < 0 && gapY < 0;
     }
 
-    Vector2 getTopLeft() {
+    public Vector2 getTopLeft() {
         return new Vector2(
                 getOrigin().getX() - width / 2.0,
                 getOrigin().getY() - height / 2.0
         );
     }
 
-    Vector2 getOrigin() {
+    public Vector2 getOrigin() {
         return origin;
     }
 
@@ -107,5 +107,25 @@ public class Rect {
 
     int getHeight() {
         return height;
+    }
+
+    public boolean intersect(Segment segment) {
+        Vector2[] corners = getCorners();
+        Segment topBorder = new Segment(corners[0], corners[1]);
+        Segment rightBorder = new Segment(corners[1], corners[2]);
+        Segment bottomBorder = new Segment(corners[2], corners[3]);
+        Segment leftBorder = new Segment(corners[3], corners[0]);
+        return segment.intersect(topBorder)
+                || segment.intersect(rightBorder)
+                || segment.intersect(bottomBorder)
+                || segment.intersect(leftBorder);
+    }
+
+    public boolean inside(Vector2 point) {
+        Vector2[] corners = getCorners();
+        Vector2 leftTop = corners[0];
+        Vector2 bottomRight = corners[2];
+        return point.getX() >= leftTop.getX() && point.getX() <= bottomRight.getX()
+                && point.getY() >= leftTop.getY() && point.getY() <= bottomRight.getY();
     }
 }

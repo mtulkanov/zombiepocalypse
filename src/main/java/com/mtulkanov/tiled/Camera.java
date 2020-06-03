@@ -17,8 +17,8 @@ class Camera {
         x = Math.min(x, 0);
         y = Math.min(y, 0);
 
-        var maxXOffset = -(Game.getGame().getMap().getWidth() - width);
-        var maxYOffset = -(Game.getGame().getMap().getHeight() - height);
+        var maxXOffset = -(Game.getGame().getTileMap().getWidthPixels() - width);
+        var maxYOffset = -(Game.getGame().getTileMap().getHeightPixels() - height);
         x = Math.max(x, maxXOffset);
         y = Math.max(y, maxYOffset);
 

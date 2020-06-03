@@ -7,7 +7,7 @@ public class Vector2 {
         this(0, 0);
     }
 
-    Vector2(double x, double y) {
+    public Vector2(double x, double y) {
         this.x = x;
         this.y = y;
     }
@@ -17,13 +17,13 @@ public class Vector2 {
         this.y = v.y;
     }
 
-    Vector2 add(Vector2 v) {
+    public Vector2 add(Vector2 v) {
         var newX = x + v.getX();
         var newY = y + v.getY();
         return new Vector2(newX, newY);
     }
 
-    Vector2 minus(Vector2 v) {
+    public Vector2 minus(Vector2 v) {
         return new Vector2(x - v.getX(), y - v.getY());
     }
 
@@ -42,7 +42,7 @@ public class Vector2 {
         return new Vector2(newX, newY);
     }
 
-    Vector2 negative() {
+    public Vector2 negative() {
         return new Vector2(x * -1, y * -1);
     }
 
@@ -64,7 +64,7 @@ public class Vector2 {
         return x * v.getX() + y * v.getY();
     }
 
-    Vector2 unit() {
+    public Vector2 unit() {
         return new Vector2(x / magnitude(), y / magnitude());
     }
 
@@ -98,12 +98,19 @@ public class Vector2 {
         this.y = y;
     }
 
-    int getIntX() {
+    public int getIntX() {
         return (int) x;
     }
 
-    int getIntY() {
+    public int getIntY() {
         return (int) y;
+    }
+
+    public double distance(Vector2 to) {
+        return Math.sqrt(
+                Math.pow((to.getX() - x), 2)
+              + Math.pow((to.getY() - y), 2)
+        );
     }
 
     @Override

@@ -2,13 +2,19 @@ package com.mtulkanov.tiled;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.HashMap;
+import java.util.Map;
 
 public class KeyManager implements KeyListener {
+    private static final int DEBOUNCE_PERIOD = 1_000_000_000 / 5;
+    private final Map<Integer, Long> lastClickTimestamps;
+
     private boolean[] keys;
-    boolean up, down, left, right, space;
+    boolean up, down, left, right, space, g;
 
     KeyManager() {
         keys = new boolean[256];
+        lastClickTimestamps = new HashMap<>();
     }
 
     void update() {
@@ -17,6 +23,7 @@ public class KeyManager implements KeyListener {
         left = keys[KeyEvent.VK_A];
         right = keys[KeyEvent.VK_D];
         space = keys[KeyEvent.VK_SPACE];
+        g = keys[KeyEvent.VK_G];
     }
 
     @Override
@@ -32,5 +39,20 @@ public class KeyManager implements KeyListener {
     @Override
     public void keyTyped(KeyEvent e) {
 
+    }
+
+    public boolean wasClicked(int button) {
+        return keys[button] && wasClickedDebounced(button);
+    }
+
+    private boolean wasClickedDebounced(int button) {
+        Long lastClicked = lastClickTimestamps.get(button);
+        Long current = System.nanoTime();
+        if (lastClicked == null
+                || (current - lastClicked) >= DEBOUNCE_PERIOD) {
+            lastClickTimestamps.put(button, current);
+            return true;
+        }
+        return false;
     }
 }
