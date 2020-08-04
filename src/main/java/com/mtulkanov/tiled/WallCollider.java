@@ -2,16 +2,16 @@ package com.mtulkanov.tiled;
 
 import java.util.List;
 
-class WallCollider {
+public class WallCollider {
     private List<Obstacle> obstacles;
     private Rect rect;
 
-    WallCollider(Rect rect) {
+    public WallCollider(Rect rect) {
         this.obstacles = Game.getGame().getObstacles();
         this.rect = new Rect(rect);
     }
 
-    Rect move(Vector2 displacement) {
+    public Rect move(Vector2 displacement) {
         var beforeTrans = new Rect(rect);
         rect.translate(displacement);
         var collidesWall = collides();

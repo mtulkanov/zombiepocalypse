@@ -32,4 +32,8 @@ public class DistanceNode implements Comparable<DistanceNode> {
         double distance = from.getNode().getPos().distance(to.getPos());
         return new DistanceNode(to, distance);
     }
+
+    public DistanceNode setDistance(double distance) {
+        return new DistanceNode(node, distance);
+    }
 }

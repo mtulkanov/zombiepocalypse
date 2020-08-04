@@ -10,14 +10,14 @@ public class KeyManager implements KeyListener {
     private final Map<Integer, Long> lastClickTimestamps;
 
     private boolean[] keys;
-    boolean up, down, left, right, space, g;
+    public boolean up, down, left, right, space, g;
 
-    KeyManager() {
+    public KeyManager() {
         keys = new boolean[256];
         lastClickTimestamps = new HashMap<>();
     }
 
-    void update() {
+    public void update() {
         up = keys[KeyEvent.VK_W];
         down = keys[KeyEvent.VK_S];
         left = keys[KeyEvent.VK_A];

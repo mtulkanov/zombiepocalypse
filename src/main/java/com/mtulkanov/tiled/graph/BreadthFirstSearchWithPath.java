@@ -1,5 +1,7 @@
 package com.mtulkanov.tiled.graph;
 
+import com.mtulkanov.tiled.Vector2;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,8 +34,12 @@ public class BreadthFirstSearchWithPath {
                 double newCost = costSoFar.get(current) + current.getDistance();
                 if (!cameFrom.containsKey(next) || newCost < costSoFar.get(next)) {
                     costSoFar.put(next, newCost);
-                    frontier.add(next);
                     cameFrom.put(next, current);
+                    Vector2 currentPos = current.getNode().getPos();
+                    Vector2 nextPos = next.getNode().getPos();
+                    double priority = newCost + currentPos.manhattenDistance(nextPos);
+                    DistanceNode nextEstimated = next.setDistance(priority);
+                    frontier.add(nextEstimated);
                 }
             }
         }

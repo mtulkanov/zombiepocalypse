@@ -3,7 +3,7 @@ package com.mtulkanov.tiled;
 public class Vector2 {
     private double x, y;
 
-    Vector2() {
+    public Vector2() {
         this(0, 0);
     }
 
@@ -12,7 +12,7 @@ public class Vector2 {
         this.y = y;
     }
 
-    Vector2(Vector2 v) {
+    public Vector2(Vector2 v) {
         this.x = v.x;
         this.y = v.y;
     }
@@ -27,7 +27,7 @@ public class Vector2 {
         return new Vector2(x - v.getX(), y - v.getY());
     }
 
-    Vector2 multi(double scalar) {
+    public Vector2 multi(double scalar) {
         return new Vector2(x * scalar, y * scalar);
     }
 
@@ -35,7 +35,7 @@ public class Vector2 {
         return new Vector2(x / scalar, y / scalar);
     }
 
-    Vector2 rotate(double degrees) {
+    public Vector2 rotate(double degrees) {
         var rad = Math.toRadians(degrees);
         var newX = Math.cos(rad) * x - Math.sin(rad) * y;
         var newY = Math.sin(rad) * x + Math.cos(rad) * y;
@@ -55,12 +55,12 @@ public class Vector2 {
         return x == v.getX() && y == v.getY();
     }
 
-    Vector2 project(Vector2 v) {
+    public Vector2 project(Vector2 v) {
         var unit = v.unit();
         return unit.multi(dotProduct(unit));
     }
 
-    double dotProduct(Vector2 v) {
+    public double dotProduct(Vector2 v) {
         return x * v.getX() + y * v.getY();
     }
 
@@ -68,33 +68,33 @@ public class Vector2 {
         return new Vector2(x / magnitude(), y / magnitude());
     }
 
-    double magnitude() {
+    public double magnitude() {
         return Math.sqrt(x * x + y * y);
     }
 
-    double angle(Vector2 v) {
+    public double angle(Vector2 v) {
         var dot = dotProduct(v);
         var det = x * v.getY() - y * v.getX();
         return -Math.toDegrees(Math.atan2(det, dot));
     }
 
-    Vector2 normal() {
+    public Vector2 normal() {
         return new Vector2(-y, x);
     }
 
-    double getX() {
+    public double getX() {
         return x;
     }
 
-    double getY() {
+    public double getY() {
         return y;
     }
 
-    void setX(double x) {
+    public void setX(double x) {
         this.x = x;
     }
 
-    void setY(double y) {
+    public void setY(double y) {
         this.y = y;
     }
 
@@ -116,5 +116,9 @@ public class Vector2 {
     @Override
     public String toString() {
         return String.format("Vector2[x=%.1f,y=%.1f]", x, y);
+    }
+
+    public double manhattenDistance(Vector2 v) {
+        return Math.abs(x - v.getX()) + Math.abs(y - v.getY());
     }
 }

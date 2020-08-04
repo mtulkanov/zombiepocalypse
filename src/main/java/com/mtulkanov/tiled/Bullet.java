@@ -4,7 +4,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Random;
 
-class Bullet {
+public class Bullet {
     private static final int MOVE_SPEED = 10;
     private static final int LIFETIME = 1_000_000_000;
     private static final int SPREAD = 5;
@@ -18,7 +18,7 @@ class Bullet {
 
     private boolean despawned = false;
 
-    Bullet(Vector2 origin, Vector2 dir, BufferedImage sprite) {
+    public Bullet(Vector2 origin, Vector2 dir, BufferedImage sprite) {
         this.rect = Rect.createFromOrigin(origin, sprite.getWidth(), sprite.getHeight());
         this.sprite = sprite;
         this.dir = dir.rotate(getRandomSpread());

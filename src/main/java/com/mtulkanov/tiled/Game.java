@@ -1,10 +1,14 @@
 package com.mtulkanov.tiled;
 
+import com.mtulkanov.tiled.camera.Camera;
 import com.mtulkanov.tiled.graph.*;
+import com.mtulkanov.tiled.observer.SubjectImpl;
 import com.mtulkanov.tiled.pathfinder.BreadthFirstSearchPathfinder;
 import com.mtulkanov.tiled.pathfinder.Pathfinder;
-import com.mtulkanov.tiled.pathfinder.RunAwayPathfinder;
-import com.mtulkanov.tiled.pathfinder.StraightLinePathfinder;
+import com.mtulkanov.tiled.player.GraphicsComponent;
+import com.mtulkanov.tiled.player.Player;
+import com.mtulkanov.tiled.player.InputComponent;
+import com.mtulkanov.tiled.system.BattleSystem;
 import com.mtulkanov.tiled.tmx.TileMap;
 import com.mtulkanov.tiled.tmx.TileObject;
 
@@ -53,9 +57,11 @@ public class Game implements Runnable {
     private List<Bullet> bullets;
     private TileMap tileMap;
 
-    private boolean debug = true;
+    private boolean debug = false;
 
-    static Game getGame() {
+    private BattleSystem battleSystem;
+
+    public static Game getGame() {
         if (game == null) {
             game = new Game();
         }
@@ -72,11 +78,12 @@ public class Game implements Runnable {
         display.getFrame().addKeyListener(keyManager);
         Assets.init();
         tileMap = new TileMap(TILE_MAP_PATH);
+        battleSystem = new BattleSystem();
         initState();
     }
 
     private void initState() {
-        this.camera = new Camera(WIDTH, HEIGHT);
+        this.camera = new Camera(WIDTH, HEIGHT, null);
         player = initPlayer(tileMap);
         obstacles = initObstacles(tileMap);
         mobs = initMobs(tileMap);
@@ -104,7 +111,13 @@ public class Game implements Runnable {
         int x = tileObject.getX() - Assets.player.getWidth() / 2;
         int y = tileObject.getY() - Assets.player.getHeight() / 2;
         Vector2 firstPoint = new Vector2(x, y);
-        return new Player(firstPoint, Assets.player);
+        return new Player(
+                firstPoint,
+                Assets.player,
+                new InputComponent(),
+                new GraphicsComponent(),
+                new SubjectImpl()
+        );
     }
 
     private List<Mob> initMobs(TileMap tileMap) {
@@ -131,14 +144,23 @@ public class Game implements Runnable {
     }
 
     private void update() {
+        var bs = display.getCanvas().getBufferStrategy();
+        if (bs == null) {
+            display.getCanvas().createBufferStrategy(3);
+            return;
+        }
+        g = bs.getDrawGraphics();
+        g.clearRect(0, 0, WIDTH, HEIGHT);
+
         keyManager.update();
         updateDebug();
-        player.update();
+        camera.update(player);
+        battleSystem.update(player, bullets, keyManager);
+        player.update(keyManager, dt, g, camera.getOffset());
         mobs.forEach(mob -> mob.update(player));
         bullets.forEach(Bullet::update);
         bullets.removeIf(Bullet::isDespawned);
         mobs.removeIf(Mob::isDead);
-        camera.update(player);
     }
 
     private void updateDebug() {
@@ -162,7 +184,6 @@ public class Game implements Runnable {
         tileMap.render(g, camera.getOffset());
         mobs.forEach(mob -> mob.render(g, camera.getOffset()));
         bullets.forEach(bullet -> bullet.render(g, camera.getOffset()));
-        player.render(g, camera.getOffset());
         if (debug) {
             obstacles.forEach(obstacle -> obstacle.render(g, camera.getOffset()));
         }
@@ -175,21 +196,21 @@ public class Game implements Runnable {
     public void run() {
         init();
 
-        int fps = 60;
-        double timePerTick = 1_000_000_000 / fps;
+        final int FPS = 60;
+        final double TIME_PER_TICK = 1_000.0 / FPS;
         double delta = 0;
         long now;
-        long lastTime = System.nanoTime();
+        long lastTime = System.currentTimeMillis();
         dt = 0;
 
         while (running) {
-            now = System.nanoTime();
-            dt += (now - lastTime) / 1_000_000_000.0;
-            delta += (now - lastTime) / timePerTick;
+            now = System.currentTimeMillis();
+            dt += (now - lastTime) / 1_000.0;
+            delta += (now - lastTime) / TIME_PER_TICK;
             lastTime = now;
 
             if (delta >= 1) {
-                var realFps = delta * fps;
+                var realFps = delta * FPS;
                 display.getFrame().setTitle(String.format("FPS %.2f", realFps));
                 update();
                 render();
@@ -221,7 +242,7 @@ public class Game implements Runnable {
         }
     }
 
-    void reset() {
+    public void reset() {
         initState();
     }
 

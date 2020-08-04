@@ -2,8 +2,8 @@ package com.mtulkanov.tiled;
 
 import java.awt.image.BufferedImage;
 
-class Assets {
-    static BufferedImage player, playerDamaged, wall, mob, bullet;
+public class Assets {
+    public static BufferedImage player, playerDamaged, wall, mob, bullet;
 
     static void init() {
         var characters = new SpriteSheet(ImageLoader.load("images/characters.png"));

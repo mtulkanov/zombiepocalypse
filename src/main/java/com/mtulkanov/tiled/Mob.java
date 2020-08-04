@@ -1,6 +1,7 @@
 package com.mtulkanov.tiled;
 
 import com.mtulkanov.tiled.pathfinder.Pathfinder;
+import com.mtulkanov.tiled.player.Player;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;

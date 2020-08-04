@@ -63,7 +63,7 @@ public class Rect {
         return new Vector2[] {topLeft, topRight, bottomRight, bottomLeft};
     }
 
-    void draw(Graphics g, Color color, Vector2 offset) {
+    public void draw(Graphics g, Color color, Vector2 offset) {
         var g2 = (Graphics2D) g.create();
         var savedColor = g2.getColor();
         g2.setColor(color);
@@ -101,11 +101,11 @@ public class Rect {
         return origin;
     }
 
-    int getWidth() {
+    public int getWidth() {
         return width;
     }
 
-    int getHeight() {
+    public int getHeight() {
         return height;
     }
 
